@@ -1,9 +1,8 @@
 # =============================================================
-# main.py — Fuzzy Relation Explorer v6.3
+# main.py — Fuzzy Relation Explorer v6.4
 # -------------------------------------------------------------
-# Complete Streamlit app for fuzzy binary relations: matrix
-# management, visualization, α-cuts, projections, property
-# checks, operations (¬, ∪, ∩, ∘), Warshall–Kosko closure, export.
+# Проверка: рефлексивность, антирефлексивность, симметрия,
+# антисимметрия, транзитивность, слабая и сильная полнота.
 # =============================================================
 """
 Run with:
@@ -75,6 +74,9 @@ def _square(A):
 def is_reflexive(A):
     return _square(A) and np.allclose(np.diag(A), 1.0, atol=TOL)
 
+def is_irreflexive(A):
+    return _square(A) and np.allclose(np.diag(A), 0.0, atol=TOL)
+
 def is_symmetric(A):
     return _square(A) and np.allclose(A, A.T, atol=TOL)
 
@@ -87,11 +89,33 @@ def is_antisymmetric(A):
 def is_transitive(A):
     return _square(A) and np.all(maxmin_comp(A, A) <= A + TOL)
 
+EPS = 1e-8
+
+def is_strong_total(matrix):
+    n = len(matrix)
+    for i in range(n):
+        for j in range(n):
+            if i != j and abs(max(matrix[i][j], matrix[j][i]) - 1) > EPS:
+                return False
+    return True
+
+def is_weak_total(matrix):
+    n = len(matrix)
+    for i in range(n):
+        for j in range(n):
+            if i != j and max(matrix[i][j], matrix[j][i]) <= EPS:
+                return False
+    return True
+
+
 PROPERTY_FUNCS = {
     "Reflexive": is_reflexive,
+    "Antireflexive": is_irreflexive,
     "Symmetric": is_symmetric,
     "Antisymmetric": is_antisymmetric,
     "Max–min transitive": is_transitive,
+    "Weakly total": is_weak_total,
+    "Strongly total": is_strong_total,
 }
 
 # ─────────── visualization ──────────
